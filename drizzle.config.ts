@@ -1,16 +1,21 @@
 // drizzle.config.ts
-import type { Config } from "drizzle-kit";
+import "dotenv/config";
+import { defineConfig } from "drizzle-kit";
+import fs from "fs";
+//const certificate = fs.readFileSync('./certs/prod-ca-2021.crt').toString();
 
-export default {
-  schema: "./src/lib/db/schema/index.ts",
+export default defineConfig({
+  schema: "./src/shared/db/schema/index.ts",
   out: "./drizzle",
   dialect: "postgresql",
   dbCredentials: {
-    host: "aws-0-us-east-1.pooler.supabase.com",
+    host: "aws-1-us-east-2.pooler.supabase.com",
     database: "postgres",
-    user: "postgres.hymiyqshwskykptufkfb",
-    password: process.env.DB_PASSWORD!,
-    port: 6543,
-    ssl: false, // Try without SSL first
+    user: "postgres.wwehrrarhinwlhsshedv",
+    password: "9eclZwQnWBkXYuCv",
+    port: 5432,
+    //ssl:"verify-full" ,
   },
-} satisfies Config;
+  verbose: true,
+  strict: true,
+});
