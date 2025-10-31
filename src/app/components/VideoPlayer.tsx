@@ -143,11 +143,11 @@ export default function VideoPlayer({
             <video
               ref={videoRef}
               className="w-full h-full object-contain"
-              poster={video.thumbnailUrl}
+              poster={video.thumbnail_url}
               preload="metadata"
               onClick={togglePlay}
             >
-              <source src={video.fileUrl} type={video.mimeType} />
+              <source src={video.file_url} type={video.mimeType} />
               Your browser does not support the video tag.
             </video>
 

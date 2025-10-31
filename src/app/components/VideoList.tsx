@@ -173,7 +173,7 @@ export default function VideoList({
             <div className="relative aspect-video bg-black overflow-hidden">
               <video
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                poster={video.thumbnailUrl}
+                poster={video.thumbnail_url}
                 preload="metadata"
                 muted
                 onMouseEnter={(e) => {
@@ -184,7 +184,7 @@ export default function VideoList({
                   gsap.to(e.currentTarget, { scale: 1, duration: 0.3 });
                 }}
               >
-                <source src={video.fileUrl} type={video.mimeType} />
+                <source src={video.file_url} type={video.mimeType} />
               </video>
 
               {/* Play Button Overlay */}

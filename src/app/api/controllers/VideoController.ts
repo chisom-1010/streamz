@@ -31,7 +31,7 @@ export const uploadVideo = async (req: Request, res: Response) => {
     await r2Client.send(uploadCommand);
 
     // Generate R2 public URL
-    const fileUrl = `https://${process.env.R2_PUBLIC_URL}/${fileName}`;
+    const file_url = `https://${process.env.R2_PUBLIC_URL}/${fileName}`;
 
     // Save to database
     const [newVideo] = await db
@@ -40,7 +40,7 @@ export const uploadVideo = async (req: Request, res: Response) => {
         id: videoId,
         title,
         description,
-        fileUrl,
+        file_url,
         mimeType: file.mimetype,
         genreId: genreId || null,
       })
@@ -64,8 +64,8 @@ export const getVideos = async (req: Request, res: Response) => {
         id: videos.id,
         title: videos.title,
         description: videos.description,
-        fileUrl: videos.fileUrl,
-        thumbnailUrl: videos.thumbnailUrl,
+        file_url: videos.file_url,
+        thumbnail_url: videos.thumbnail_url,
         duration: videos.duration,
         mimeType: videos.mimeType,
         genre: {
@@ -94,8 +94,8 @@ export const getVideo = async (req: Request, res: Response) => {
         id: videos.id,
         title: videos.title,
         description: videos.description,
-        fileUrl: videos.fileUrl,
-        thumbnailUrl: videos.thumbnailUrl,
+        file_url: videos.file_url,
+        thumbnail_url: videos.thumbnail_url,
         duration: videos.duration,
         mimeType: videos.mimeType,
         genre: {
@@ -162,7 +162,7 @@ export const deleteVideo = async (req: Request, res: Response) => {
     }
 
     // Delete from R2
-    const fileName = video.fileUrl.split("/").pop();
+    const fileName = video.file_url.split("/").pop();
     if (fileName) {
       const deleteCommand = new DeleteObjectCommand({
         Bucket: R2_BUCKET,

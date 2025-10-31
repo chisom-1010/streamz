@@ -1,7 +1,8 @@
 import { Video } from "@/shared/types/video";
 import { User } from "@/shared/types/user";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+//const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = "";
 
 interface ApiResponse<T> {
   data?: T;
@@ -206,19 +207,18 @@ class ApiClient {
   }
 
   async testConnection() {
-    console.log('🧪 Testing backend connection...');
-    
+    console.log("🧪 Testing backend connection...");
+
     try {
       const response = await fetch(`${this.baseURL}/api/health`);
       const data = await response.json();
-      console.log('✅ Backend connection successful:', data);
+      console.log("✅ Backend connection successful:", data);
       return { success: true, data };
     } catch (error: any) {
-      console.error('❌ Backend connection failed:', error);
+      console.error("❌ Backend connection failed:", error);
       return { success: false, error: error.message };
     }
   }
-
 
   async getProfile(userId: string) {
     return this.request<{ user: User }>(`/api/auth/profile?id=${userId}`);
