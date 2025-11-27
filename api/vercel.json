@@ -9,8 +9,13 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "server.ts",
+      "dest": "/server.ts",
       "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
     }
-  ]
+  ],
+  "functions": {
+    "server.ts": {
+      "maxDuration": 30
+    }
+  }
 }
