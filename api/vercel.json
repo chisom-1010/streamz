@@ -13,9 +13,11 @@
       "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
     }
   ],
-  "functions": {
-    "server.ts": {
-      "maxDuration": 30
+  "functions": [
+    {
+      "server.ts": {
+        "maxDuration": 30
+      }
     }
-  }
+  ]
 }
