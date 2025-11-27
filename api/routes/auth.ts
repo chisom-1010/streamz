@@ -7,7 +7,7 @@ import {
   getAllUsers,
   toggleUserStatus,
   verifyAdmin,
-} from "../controllers/AuthController";
+} from "../controllers/AuthController.ts";
 
 const router = express.Router();
 
