@@ -2,7 +2,7 @@
   "version": 2,
   "functions": {
     "api/server.ts": {
-      "runtime": "nodejs20.x",
+      "runtime": "nodejs18.x",
       "maxDuration": 30,
       "memory": 1024
     }
