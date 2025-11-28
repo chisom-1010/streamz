@@ -2,7 +2,8 @@
   "version": 2,
   "functions": {
     "api/server.ts": {
-      "runtime": "vercel/node@20.x",
+      "$schema": "https://openapi.vercel.sh/vercel.json",
+      "bunVersion": "1.x",
       "maxDuration": 30,
       "memory": 1024
     }
