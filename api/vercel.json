@@ -1,30 +1,32 @@
 {
   "version": 2,
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "bunVersion": "1.x",
   "functions": {
     "api/server.ts": {
-      "$schema": "https://openapi.vercel.sh/vercel.json",
-      "bunVersion": "1.x",
       "maxDuration": 30,
       "memory": 1024
     }
   },
-  "routes": [
+  "rewrites": [
     {
-      "src": "/(.*)",
-      "dest": "/server.ts",
-      "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"]
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/server.ts"
+      "source": "/(.*)",
+      "destination": "/server.ts"
     }
   ],
-  "build": {
-    "env": {
-      "NODE_ENV": "production"
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, PATCH, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization"
+        }
+      ]
     }
-  },
-  "env": {
-    "NODE_ENV": "production"
-  }
+  ]
 }
