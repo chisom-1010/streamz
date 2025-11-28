@@ -1,8 +1,8 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import videoRoutes from "./routes/videos";
-import authRoutes from "./routes/auth";
+import videoRoutes from "./api/routes/videos";
+import authRoutes from "./api/routes/auth";
 import { errorHandler } from "./middleware/errorHandler";
 
 dotenv.config();

@@ -21,7 +21,7 @@
     "noEmit": true,
     "paths": {
       "@/*": ["./*"],
-      "@/routes/*": ["./routes/*"],
+      "@/routes/*": ["api/routes/*"],
       "@/controllers/*": ["./controllers/*"],
       "@/middleware/*": ["./middleware/*"],
       "@/utils/*": ["./utils/*"],
@@ -29,6 +29,6 @@
       "@/config/*": ["./config/*"]
     }
   },
-  "include": ["**/**/*.ts", "server.ts"],
+  "include": ["**/**/*.ts", "api/server.ts"],
   "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
 }

@@ -3,7 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import videoRoutes from "./routes/videos.js";
 import authRoutes from "./routes/auth.js";
-import { errorHandler } from "./middleware/errorHandler.js";
+import { errorHandler } from "../middleware/errorHandler.js";
 
 // Load environment variables
 dotenv.config();

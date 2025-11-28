@@ -6,8 +6,8 @@ import {
   getVideo,
   updateVideo,
   deleteVideo,
-} from "../controllers/VideoController.ts";
-import { authenticateAdmin } from "../middleware/auth.ts";
+} from "../../controllers/VideoController.ts";
+import { authenticateAdmin } from "../../middleware/auth.ts";
 
 const router = express.Router();
 
