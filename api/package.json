@@ -5,8 +5,8 @@
   "type": "module",
   "main": "dist/server.ts",
   "scripts": {
-    "dev": "bun --watch api/server.ts",
-    "build": "bun build api/server.ts --outdir dist --target node",
+    "dev": "bun --watch ./api/server.ts",
+    "build": "bun build ./api/server.ts --outdir dist --target node",
     "start": "bun dist/server.ts",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
