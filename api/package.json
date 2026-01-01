@@ -6,7 +6,7 @@
   "main": "dist/server.ts",
   "scripts": {
     "dev": "bun --watch api/server.ts",
-    "build": "bun build api/server.ts --outdir .vercel/output/functions --target bun",
+    "build": "bun build api/server.ts --outdir dist --target bun",
     "start": "bun dist/server.ts",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
@@ -35,7 +35,7 @@
     "tsx": "^4.20.6",
     "typescript": "^5.9.2"
   },
-  "engine": {
+  "engines": {
     "bun": ">=1.0.0"
   },
   "keywords": [

@@ -2,8 +2,7 @@ import { Video } from "../shared/types/video";
 import { User } from "../shared/types/user";
 
 // Update this to point to your backend server
-//const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-const API_BASE_URL = "https://streamz-api.vercel.app/";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 interface ApiResponse<T> {
   data?: T;
   error?: string;
