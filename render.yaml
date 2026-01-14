@@ -1,43 +1,55 @@
-# render.yaml - Two separate services
+# CORRECTED render.yaml
 services:
   # Backend Service (Express + Supabase)
   - type: web
     name: streamz-api
-    runtime: bun
+    runtime: node # ← Changed from "bun" to "node"
     rootDir: ./api
-    region: oregon # Choose your region
-    buildCommand: bun install
-    startCommand: bun run server.ts
+    region: oregon
+    buildCommand: |
+      # Install Bun first
+      curl -fsSL https://bun.sh/install | bash
+      export BUN_INSTALL="$HOME/.bun"
+      export PATH="$BUN_INSTALL/bin:$PATH"
+      # Now install dependencies with Bun
+      bun install
+    startCommand: |
+      # Make sure Bun is in PATH for runtime
+      export BUN_INSTALL="$HOME/.bun"
+      export PATH="$BUN_INSTALL/bin:$PATH"
+      bun server.ts
     healthCheckPath: /api/health
     autoDeploy: true
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 10000 # Render will override this, but good to set
+        value: 10000
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_ANON_KEY
         sync: false
-      # Add these if you use them:
-      - key: SUPABASE_SERVICE_ROLE_KEY
-        sync: false
-      - key: JWT_SECRET
-        sync: false
       - key: FRONTEND_URL
         value: https://streamz.onrender.com
-    buildFilter:
-      paths:
-        - api/**
 
   # Frontend Service (Next.js)
   - type: web
     name: streamz
-    runtime: bun
+    runtime: node # ← Changed from "bun" to "node"
     rootDir: ./client
-    region: oregon # Same region for lower latency
-    buildCommand: bun install && bun run build
-    startCommand: bun run start
+    region: oregon
+    buildCommand: |
+      # Install Bun
+      curl -fsSL https://bun.sh/install | bash
+      export BUN_INSTALL="$HOME/.bun"
+      export PATH="$BUN_INSTALL/bin:$PATH"
+      # Install dependencies and build
+      bun install
+      bun run build
+    startCommand: |
+      export BUN_INSTALL="$HOME/.bun"
+      export PATH="$BUN_INSTALL/bin:$PATH"
+      bun run start
     autoDeploy: true
     envVars:
       - key: NODE_ENV
