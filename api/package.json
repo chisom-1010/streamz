@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "main": "dist/server.ts",
+  "main": "api/server.ts",
   "scripts": {
     "dev": "bun --watch api/server.ts",
     "build": "bun build api/server.ts --outdir dist --target bun",

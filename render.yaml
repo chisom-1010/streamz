@@ -1,0 +1,57 @@
+# render.yaml - Two separate services
+services:
+  # Backend Service (Express + Supabase)
+  - type: web
+    name: streamz-api
+    runtime: bun
+    rootDir: ./api
+    region: oregon # Choose your region
+    buildCommand: bun install
+    startCommand: bun run server.ts
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000 # Render will override this, but good to set
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      # Add these if you use them:
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        value: https://streamz.onrender.com
+    buildFilter:
+      paths:
+        - api/**
+
+  # Frontend Service (Next.js)
+  - type: web
+    name: streamz
+    runtime: bun
+    rootDir: ./client
+    region: oregon # Same region for lower latency
+    buildCommand: bun install && bun run build
+    startCommand: bun run start
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: NEXT_PUBLIC_API_URL
+        value: https://streamz-api.onrender.com
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+        sync: false
+      - key: NEXT_TELEMETRY_DISABLED
+        value: 1
+    buildFilter:
+      paths:
+        - client/**

@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -11,19 +15,30 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "incremental": true,
+    "outDir": "./dist/",
     "plugins": [
       {
         "name": "next"
       }
     ],
     "paths": {
-      "@/*": ["./src/*"],
-      "@/components/*": ["./client/components/*"],
-      "@/hooks/*": ["./client/app/hooks/*"],
-      "@/ui/*": ["./client/components/ui/*"],
-      "@/lib/*": ["./client/app/lib/*"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@/components/*": [
+        "./client/components/*"
+      ],
+      "@/hooks/*": [
+        "./client/app/hooks/*"
+      ],
+      "@/ui/*": [
+        "./client/components/ui/*"
+      ],
+      "@/lib/*": [
+        "./client/app/lib/*"
+      ]
     }
   },
   "include": [
@@ -31,7 +46,10 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "lib/api.ts"
+    "lib/api.ts",
+    ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }
