@@ -2,10 +2,10 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "../shared/db/index";
 
-const connectionString = process.env.DATABASE_URL;
+const connectionString = process.env.SUPABASE_URLL;
 
 if (!connectionString) {
-  throw new Error("DATABASE_URL environment variable is required");
+  throw new Error("SUPABASE_URL environment variable is required");
 }
 
 console.log("🔗 Connecting to database...");
