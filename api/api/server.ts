@@ -23,7 +23,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:3000", // Local frontend
-      "https://streamz.onrender.com", // Production frontend
+      "https://streamz-p03k.onrender.com", // Production frontend
       process.env.FRONTEND_URL || "",
     ],
     credentials: true,

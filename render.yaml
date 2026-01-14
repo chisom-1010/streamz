@@ -17,7 +17,7 @@ services:
       # Make sure Bun is in PATH for runtime
       export BUN_INSTALL="$HOME/.bun"
       export PATH="$BUN_INSTALL/bin:$PATH"
-      bun server.ts
+      bun ./api/server.ts
     healthCheckPath: /api/health
     autoDeploy: true
     envVars:
@@ -30,7 +30,7 @@ services:
       - key: SUPABASE_ANON_KEY
         sync: false
       - key: FRONTEND_URL
-        value: https://streamz.onrender.com
+        value: https://streamz-p03k.onrender.com
 
   # Frontend Service (Next.js)
   - type: web
@@ -57,7 +57,7 @@ services:
       - key: PORT
         value: 10000
       - key: NEXT_PUBLIC_API_URL
-        value: https://streamz-api.onrender.com
+        value: https://streamz-api-39o0.onrender.com
       - key: NEXT_PUBLIC_SUPABASE_URL
         sync: false
       - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
