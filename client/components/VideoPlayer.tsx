@@ -30,7 +30,9 @@ export default function VideoJsPlayer({
     // Test both URLs
     const API_BASE_URL =
       process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-    //const VID_URL = process.env.R2_PUBLIC_URL;
+    const directUrl = video.file_url;
+    console.log('🔗 Direct video URL:', directUrl);
+    const VID_URL = process.env.R2_PUBLIC_URL;
     const streamingUrl = `${API_BASE_URL}/api/stream/${video.id}`;
     console.log('🔗 Streaming endpoint:', streamingUrl);
 

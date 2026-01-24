@@ -168,6 +168,7 @@ export const streamVideo = async (req: Request, res: Response) => {
       'http://localhost:3000',
       'https://streamz-api-39o0.onrender.com', // Backend
       'https://streamz-p03k.onrender.com', // Frontend
+      'https://pub-7801d043ab3f4e069174ad35d8439a99.r2.dev', // R2 direct access
       req.headers.origin || '',
     ];
 
@@ -360,7 +361,6 @@ export const streamVideo = async (req: Request, res: Response) => {
   }
 };
 
-
 // Update video
 export const updateVideo = async (req: Request, res: Response) => {
   try {
@@ -422,4 +422,3 @@ export const deleteVideo = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to delete video' });
   }
 };
-
