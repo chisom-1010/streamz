@@ -17,7 +17,7 @@ services:
       # Make sure Bun is in PATH for runtime
       export BUN_INSTALL="$HOME/.bun"
       export PATH="$BUN_INSTALL/bin:$PATH"
-      bun ./api/server.ts
+      bun /server.ts
     healthCheckPath: /api/health
     autoDeploy: true
     envVars:
