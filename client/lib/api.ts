@@ -1,8 +1,8 @@
-import { Video } from "../shared/types/video";
-import { User } from "../shared/types/user";
+//lib/api.ts
+import { Video } from '../shared/types/video';
+import { User } from '../shared/types/user';
 
-// Update this to point to your backend server
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 interface ApiResponse<T> {
   data?: T;
   error?: string;
@@ -17,32 +17,32 @@ class ApiClient {
     this.baseURL = baseURL;
 
     // Load admin token from localStorage on initialization (client-side only)
-    if (typeof window !== "undefined") {
-      this.adminToken = localStorage.getItem("admin_token");
+    if (typeof window !== 'undefined') {
+      this.adminToken = localStorage.getItem('admin_token');
     }
 
-    console.log("🔧 API Client initialized with baseURL:", this.baseURL);
+    console.log('🔧 API Client initialized with baseURL:', this.baseURL);
   }
 
   // Admin token methods (existing)
   setAdminToken(token: string) {
     this.adminToken = token;
-    if (typeof window !== "undefined") {
-      localStorage.setItem("admin_token", token);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('admin_token', token);
     }
   }
 
   getAdminToken(): string | null {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("admin_token") || this.adminToken;
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('admin_token') || this.adminToken;
     }
     return this.adminToken;
   }
 
   clearAdminToken() {
     this.adminToken = null;
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("admin_token");
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('admin_token');
     }
   }
 
@@ -53,16 +53,16 @@ class ApiClient {
     const url = `${this.baseURL}${endpoint}`;
     const adminToken = this.getAdminToken();
 
-    console.log("📡 API Request:", {
-      method: options.method || "GET",
+    console.log('📡 API Request:', {
+      method: options.method || 'GET',
       url,
       hasAdminToken: !!adminToken,
     });
 
     const config: RequestInit = {
-      credentials: "include",
+      credentials: 'include',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
         ...(adminToken && { Authorization: `Bearer ${adminToken}` }),
         ...options.headers,
       },
@@ -70,17 +70,17 @@ class ApiClient {
     };
 
     try {
-      console.log("🚀 Sending request to:", url);
+      console.log('🚀 Sending request to:', url);
 
       const response = await fetch(url, config);
 
-      console.log("📥 Response status:", response.status);
-      console.log("📥 Response ok:", response.ok);
+      console.log('📥 Response status:', response.status);
+      console.log('📥 Response ok:', response.ok);
 
       // Handle empty responses first
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        if (response.status === 204 || response.statusText === "No Content") {
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        if (response.status === 204 || response.statusText === 'No Content') {
           return {} as T;
         }
 
@@ -89,7 +89,7 @@ class ApiClient {
         if (!response.ok) {
           throw new Error(
             `HTTP ${response.status}: ${response.statusText} - ${
-              text || "Non-JSON response"
+              text || 'Non-JSON response'
             }`
           );
         }
@@ -100,15 +100,15 @@ class ApiClient {
 
       // Get response text first
       const responseText = await response.text();
-      console.log("📥 Raw response:", responseText);
+      console.log('📥 Raw response:', responseText);
 
       // Try to parse as JSON only if there's content
       let responseData;
-      if (responseText && responseText.trim() !== "") {
+      if (responseText && responseText.trim() !== '') {
         try {
           responseData = JSON.parse(responseText);
         } catch (parseError) {
-          console.error("❌ Failed to parse JSON response:", parseError);
+          console.error('❌ Failed to parse JSON response:', parseError);
           throw new Error(
             `Invalid JSON response: ${responseText.substring(0, 100)}`
           );
@@ -118,7 +118,7 @@ class ApiClient {
       }
 
       if (!response.ok) {
-        console.error("❌ API Error Response:", {
+        console.error('❌ API Error Response:', {
           status: response.status,
           statusText: response.statusText,
           data: responseData,
@@ -131,13 +131,13 @@ class ApiClient {
         throw new Error(errorMessage);
       }
 
-      console.log("✅ API Success:", responseData);
+      console.log('✅ API Success:', responseData);
       return responseData;
     } catch (error) {
-      console.error("❌ API Request failed:", error);
+      console.error('❌ API Request failed:', error);
 
       // Re-throw with more context
-      if (error instanceof TypeError && error.message.includes("fetch")) {
+      if (error instanceof TypeError && error.message.includes('fetch')) {
         throw new Error(
           `Network error: Cannot connect to ${url}. Is the backend server running?`
         );
@@ -150,27 +150,32 @@ class ApiClient {
   // Video API methods
   async getVideos(params?: { genre?: string; limit?: number }) {
     const searchParams = new URLSearchParams();
-    if (params?.genre) searchParams.set("genre", params.genre);
-    if (params?.limit) searchParams.set("limit", params.limit.toString());
+    if (params?.genre) searchParams.set('genre', params.genre);
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
 
     const queryString = searchParams.toString();
-    const endpoint = `/api/videos${queryString ? `?${queryString}` : ""}`;
+    const endpoint = `/api/videos/${queryString ? `?${queryString}` : ''}`;
 
     return this.request<{ videos: Video[]; count: number }>(endpoint);
   }
 
+  // Get single video details
   async getVideo(id: string) {
     return this.request<{ video: Video }>(`/api/videos/${id}`);
+  }
+
+  getStreamUrl(id: string): string {
+    return `${this.baseURL}/api/stream/${id}`;
   }
 
   async uploadVideo(formData: FormData) {
     const token = this.getAdminToken();
     const url = `${this.baseURL}/api/videos`;
 
-    console.log("📤 Uploading video to:", url);
+    console.log('📤 Uploading video to:', url);
 
     const response = await fetch(url, {
-      method: "POST",
+      method: 'POST',
       headers: {
         ...(token && { Authorization: `Bearer ${token}` }),
         // Don't set Content-Type for FormData - let the browser set it with boundary
@@ -184,19 +189,19 @@ class ApiClient {
         errorData = await response.json();
       } catch {
         errorData = {
-          error: "Upload failed",
+          error: 'Upload failed',
           message: response.statusText,
         };
       }
-      throw new Error(errorData.error || errorData.message || "Upload failed");
+      throw new Error(errorData.error || errorData.message || 'Upload failed');
     }
 
     // Handle potential empty response for upload
-    const contentType = response.headers.get("content-type");
-    if (contentType && contentType.includes("application/json")) {
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
       return response.json();
     } else {
-      return { message: "Upload successful" };
+      return { message: 'Upload successful' };
     }
   }
 
@@ -204,7 +209,7 @@ class ApiClient {
     return this.request<{ video: Video; message: string }>(
       `/api/videos/${id}`,
       {
-        method: "PUT",
+        method: 'PUT',
         body: JSON.stringify(data),
       }
     );
@@ -212,60 +217,60 @@ class ApiClient {
 
   async deleteVideo(id: string) {
     return this.request<{ message: string }>(`/api/videos/${id}`, {
-      method: "DELETE",
+      method: 'DELETE',
     });
   }
 
   // Authentication API methods
   async register(email: string, name: string, password: string) {
-    console.log("👤 API: Registering user:", { email, name });
+    console.log('👤 API: Registering user:', { email, name });
 
     const response = await this.request<{ message: string; user: User }>(
-      "/api/auth/register",
+      '/api/auth/register',
       {
-        method: "POST",
+        method: 'POST',
         body: JSON.stringify({ email, name, password }),
       }
     );
 
-    console.log("✅ API: Registration response:", response);
+    console.log('✅ API: Registration response:', response);
     return response;
   }
 
   async login(email: string, password: string) {
-    console.log("🔐 API: Logging in user:", email);
+    console.log('🔐 API: Logging in user:', email);
 
     const response = await this.request<{ message: string; user: User }>(
-      "/api/auth/login",
+      '/api/auth/login',
       {
-        method: "POST",
+        method: 'POST',
         body: JSON.stringify({ email, password }),
       }
     );
 
-    console.log("✅ API: Login response:", response);
+    console.log('✅ API: Login response:', response);
     return response;
   }
 
   async testConnection() {
-    console.log("🧪 Testing backend connection...");
+    console.log('🧪 Testing backend connection...');
 
     try {
       const response = await fetch(`${this.baseURL}/api/health`);
 
       // Handle non-JSON health response
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.includes("application/json")) {
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
         const data = await response.json();
-        console.log("✅ Backend connection successful:", data);
+        console.log('✅ Backend connection successful:', data);
         return { success: true, data };
       } else {
         const text = await response.text();
-        console.log("✅ Backend connection successful (non-JSON):", text);
-        return { success: true, data: { status: "ok", message: text } };
+        console.log('✅ Backend connection successful (non-JSON):', text);
+        return { success: true, data: { status: 'ok', message: text } };
       }
     } catch (error: any) {
-      console.error("❌ Backend connection failed:", error);
+      console.error('❌ Backend connection failed:', error);
       return { success: false, error: error.message };
     }
   }
@@ -281,7 +286,7 @@ class ApiClient {
     return this.request<{ message: string; user: User }>(
       `/api/auth/profile?id=${userId}`,
       {
-        method: "PUT",
+        method: 'PUT',
         body: JSON.stringify(data),
       }
     );
@@ -293,7 +298,7 @@ class ApiClient {
       message: string;
       isAdmin: boolean;
       timestamp: string;
-    }>("/api/auth/admin/verify");
+    }>('/api/auth/admin/verify');
   }
 
   async getAllUsers(params?: {
@@ -302,14 +307,14 @@ class ApiClient {
     active?: boolean;
   }) {
     const searchParams = new URLSearchParams();
-    if (params?.limit) searchParams.set("limit", params.limit.toString());
-    if (params?.offset) searchParams.set("offset", params.offset.toString());
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
+    if (params?.offset) searchParams.set('offset', params.offset.toString());
     if (params?.active !== undefined)
-      searchParams.set("active", params.active.toString());
+      searchParams.set('active', params.active.toString());
 
     const queryString = searchParams.toString();
     const endpoint = `/api/auth/admin/users${
-      queryString ? `?${queryString}` : ""
+      queryString ? `?${queryString}` : ''
     }`;
 
     return this.request<{
@@ -324,7 +329,7 @@ class ApiClient {
     return this.request<{ message: string; user: User }>(
       `/api/auth/admin/users/${userId}/toggle`,
       {
-        method: "PATCH",
+        method: 'PATCH',
       }
     );
   }
@@ -337,7 +342,7 @@ class ApiClient {
       timestamp: string;
       environment: string;
       endpoints: Record<string, string>;
-    }>("/api/health");
+    }>('/api/health');
   }
 }
 

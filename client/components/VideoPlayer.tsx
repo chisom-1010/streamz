@@ -1,251 +1,137 @@
-// src/frontend/components/VideoPlayer.tsx - Video player component
-"use client";
+// components/VideoPlayer.tsx - DEBUG VERSION
+'use client';
 
-import React, { useRef, useEffect, useState } from "react";
-import { Video } from "../shared/types/video";
-import { Card, CardContent } from "./ui/card";
-import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
-import {
-  Play,
-  Pause,
-  Volume2,
-  VolumeX,
-  Maximize,
-  Clock,
-  Calendar,
-} from "lucide-react";
-import gsap from "gsap";
+import React, { useEffect, useRef, useState } from 'react';
+import videojs from 'video.js';
+import 'video.js/dist/video-js.css';
+import { Video } from '../shared/types/video.js';
+import { apiClient } from '../lib/api';
 
-interface VideoPlayerProps {
+interface VideoJsPlayerProps {
   video: Video;
   autoplay?: boolean;
-  onVideoEnd?: () => void;
-  className?: string;
 }
 
-export default function VideoPlayer({
+export default function VideoJsPlayer({
   video,
   autoplay = false,
-  onVideoEnd,
-  className,
-}: VideoPlayerProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
+}: VideoJsPlayerProps) {
+  const videoRef = useRef<HTMLDivElement>(null);
+  const playerRef = useRef<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (containerRef.current) {
-      gsap.fromTo(
-        containerRef.current,
-        { opacity: 0, scale: 0.95 },
-        { opacity: 1, scale: 1, duration: 0.8, ease: "power2.out" }
+    if (!videoRef.current) return;
+
+    console.log('🎬 Initializing video player for:', video.id);
+    console.log('📹 Video file URL:', video.file_url);
+    console.log('🎞️ MIME type:', video.mimeType);
+
+    // Test both URLs
+    const API_BASE_URL =
+      process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    //const VID_URL = process.env.R2_PUBLIC_URL;
+    const streamingUrl = `${API_BASE_URL}/api/stream/${video.id}`;
+    console.log('🔗 Streaming endpoint:', streamingUrl);
+
+    // Initialize Video.js player
+    playerRef.current = videojs(
+      videoRef.current,
+      {
+        controls: true,
+        autoplay,
+        preload: 'metadata',
+        fluid: true,
+        sources: [
+          {
+            src: streamingUrl,
+            type: video.mimeType || 'video/mp4',
+          },
+        ],
+        html5: {
+          nativeControlsForTouch: true,
+          vhs: {
+            overrideNative: true,
+          },
+        },
+      },
+      () => {
+        console.log('✅ Video.js player ready');
+      }
+    );
+
+    // Error handling
+    playerRef.current.on('error', (e: any) => {
+      console.error('❌ Video.js error:', e);
+      console.error('Error details:', playerRef.current?.error());
+
+      setError(
+        `Video error: ${playerRef.current?.error()?.message || 'Unknown error'}`
       );
-    }
-  }, []);
 
-  useEffect(() => {
-    const videoElement = videoRef.current;
-    if (!videoElement) return;
+      // Try direct URL as fallback
+      if (video.file_url) {
+        console.log('🔄 Trying direct URL as fallback:', video.file_url);
+        playerRef.current.src({
+          src: video.file_url,
+          type: video.mimeType || 'video/mp4',
+        });
+      }
+    });
 
-    const handleLoadedMetadata = () => {
-      setDuration(videoElement.duration);
-    };
-
-    const handleTimeUpdate = () => {
-      setCurrentTime(videoElement.currentTime);
-    };
-
-    const handleEnded = () => {
-      setIsPlaying(false);
-      onVideoEnd?.();
-    };
-
-    videoElement.addEventListener("loadedmetadata", handleLoadedMetadata);
-    videoElement.addEventListener("timeupdate", handleTimeUpdate);
-    videoElement.addEventListener("ended", handleEnded);
-
-    if (autoplay) {
-      videoElement
-        .play()
-        .then(() => setIsPlaying(true))
-        .catch(console.error);
-    }
+    // Log events for debugging
+    playerRef.current.on('loadstart', () => console.log('📥 Load start'));
+    playerRef.current.on('loadedmetadata', () =>
+      console.log('✅ Metadata loaded')
+    );
+    playerRef.current.on('loadeddata', () => console.log('✅ Data loaded'));
+    playerRef.current.on('canplay', () => console.log('▶️ Can play'));
+    playerRef.current.on('canplaythrough', () =>
+      console.log('🎯 Can play through')
+    );
 
     return () => {
-      videoElement.removeEventListener("loadedmetadata", handleLoadedMetadata);
-      videoElement.removeEventListener("timeupdate", handleTimeUpdate);
-      videoElement.removeEventListener("ended", handleEnded);
+      if (playerRef.current) {
+        playerRef.current.dispose();
+      }
     };
-  }, [video.id, autoplay, onVideoEnd]);
+  }, [video.id, video.mimeType, video.file_url, autoplay]);
 
-  const togglePlay = async () => {
-    if (!videoRef.current) return;
-
-    try {
-      if (isPlaying) {
-        videoRef.current.pause();
-        setIsPlaying(false);
-      } else {
-        await videoRef.current.play();
-        setIsPlaying(true);
-      }
-    } catch (error) {
-      console.error("Error toggling video playback:", error);
-    }
-  };
-
-  const toggleMute = () => {
-    if (!videoRef.current) return;
-
-    const newMutedState = !isMuted;
-    videoRef.current.muted = newMutedState;
-    setIsMuted(newMutedState);
-  };
-
-  const toggleFullscreen = async () => {
-    if (!videoRef.current) return;
-
-    try {
-      if (document.fullscreenElement) {
-        await document.exitFullscreen();
-      } else {
-        await videoRef.current.requestFullscreen();
-      }
-    } catch (error) {
-      console.error("Error toggling fullscreen:", error);
-    }
-  };
-
-  const formatTime = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
-
-  const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
+  if (error) {
+    return (
+      <div className='aspect-video bg-black rounded-lg flex items-center justify-center'>
+        <div className='text-center p-8'>
+          <div className='text-red-500 text-xl font-bold mb-2'>Video Error</div>
+          <p className='text-gray-400 mb-4'>{error}</p>
+          <div className='space-y-2'>
+            <a
+              href={video.file_url}
+              target='_blank'
+              rel='noopener noreferrer'
+              className='block text-blue-400 hover:underline'
+            >
+              Try direct video link
+            </a>
+            <button
+              onClick={() => window.location.reload()}
+              className='px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white'
+            >
+              Refresh Page
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div ref={containerRef} className={`space-y-4 ${className}`}>
-      {/* Video Player */}
-      <Card className="overflow-hidden">
-        <CardContent className="p-0">
-          <div className="relative aspect-video bg-black">
-            <video
-              ref={videoRef}
-              className="w-full h-full object-contain"
-              poster={video.thumbnail_url}
-              preload="metadata"
-              onClick={togglePlay}
-            >
-              <source src={video.file_url} type={video.mimeType} />
-              Your browser does not support the video tag.
-            </video>
-
-            {/* Video Controls Overlay */}
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-              <div className="flex items-center gap-3 text-white">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={togglePlay}
-                  className="text-white hover:bg-white/20"
-                >
-                  {isPlaying ? (
-                    <Pause className="h-5 w-5" />
-                  ) : (
-                    <Play className="h-5 w-5 fill-current" />
-                  )}
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={toggleMute}
-                  className="text-white hover:bg-white/20"
-                >
-                  {isMuted ? (
-                    <VolumeX className="h-5 w-5" />
-                  ) : (
-                    <Volume2 className="h-5 w-5" />
-                  )}
-                </Button>
-
-                <div className="flex-1 flex items-center gap-2 text-sm">
-                  <span>{formatTime(currentTime)}</span>
-                  <div className="flex-1 bg-white/30 rounded-full h-1">
-                    <div
-                      className="bg-white rounded-full h-full transition-all duration-100"
-                      style={{
-                        width: `${
-                          duration ? (currentTime / duration) * 100 : 0
-                        }%`,
-                      }}
-                    />
-                  </div>
-                  <span>{formatTime(duration)}</span>
-                </div>
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={toggleFullscreen}
-                  className="text-white hover:bg-white/20"
-                >
-                  <Maximize className="h-5 w-5" />
-                </Button>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Video Information */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="space-y-4">
-            <div className="flex items-start justify-between">
-              <div className="space-y-2">
-                <h1 className="text-2xl font-bold leading-tight">
-                  {video.title}
-                </h1>
-                {video.genre && (
-                  <Badge variant="secondary">{video.genre.name}</Badge>
-                )}
-              </div>
-              <div className="text-right text-sm text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <Calendar className="h-4 w-4" />
-                  {formatDate(video.createdAt)}
-                </div>
-                {video.duration && (
-                  <div className="flex items-center gap-1 mt-1">
-                    <Clock className="h-4 w-4" />
-                    {formatTime(video.duration)}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {video.description && (
-              <div className="pt-2 border-t">
-                <p className="text-muted-foreground leading-relaxed">
-                  {video.description}
-                </p>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+    <div className='relative aspect-video bg-black rounded-lg overflow-hidden'>
+      <div data-vjs-player>
+        <div
+          ref={videoRef}
+          className='video-js vjs-big-play-centered vjs-fluid'
+        />
+      </div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import { useRouter } from "next/navigation";
 import { useUserManagement } from "../hooks/UserManagement";
 import { User } from "../shared/types/user";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
@@ -14,7 +14,7 @@ import {
   UserCheck,
   UserX,
   Mail,
-  Calendar,
+  ArrowLeft,
   MoreVertical,
   Eye,
   EyeOff,
@@ -77,6 +77,8 @@ export default function UserManagement({
     }
   };
 
+  const router = useRouter();
+
   // Loading skeleton
   if (loading) {
     return (
@@ -117,6 +119,10 @@ export default function UserManagement({
             User Management
           </CardTitle>
           <Badge variant="secondary">{total} total users</Badge>
+          <Button variant="default" size="sm" onClick={() => router.back()}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
         </div>
 
         {/* Search and Filter */}

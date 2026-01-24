@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "main": "api/server.ts",
+  "main": "server.ts",
   "scripts": {
-    "dev": "bun --watch api/server.ts",
-    "build": "bun build api/server.ts --outdir dist --target bun",
+    "dev": "bun --watch server.ts",
+    "build": "bun build server.ts --outdir dist --target bun",
     "start": "bun dist/server.ts",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",

@@ -26,8 +26,8 @@ export interface Genre {
 export interface VideoView {
   id: string;
   videoId: string;
-  userId?: string;
-  watchTime: number;
+  userIdhTi?: string;
+  watcme: number;
   createdAt: string;
 }
 
