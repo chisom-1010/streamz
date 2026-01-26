@@ -27,19 +27,20 @@ export const uploadVideo = async (req: Request, res: Response) => {
 
     // Generate unique filename
     const videoId = uuidv4();
-    const fileName = `videos/${videoId}-${file.originalname.replace(
-      /[^a-zA-Z0-9.-]/g,
-      '%20'
-    )}`;
+    const safeFilename = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '%20');
+    const r2Key = `videos/${videoId}-${safeFilename}`; // This is the R2 key
 
-    // Upload to R2
+    console.log('📤 Uploading to R2 with key:', r2Key);
+
+    // Upload to R2 with PUBLIC permissions
     const uploadCommand = new PutObjectCommand({
       Bucket: R2_BUCKET,
-      Key: fileName,
+      Key: r2Key,
       Body: file.buffer,
       ContentType: file.mimetype,
       ContentDisposition: 'inline',
       CacheControl: 'public, max-age=31536000',
+      ACL: 'public-read', // Make object publicly readable
       Metadata: {
         'cross-origin-resource-policy': 'cross-origin',
       },
@@ -47,8 +48,11 @@ export const uploadVideo = async (req: Request, res: Response) => {
 
     await r2Client.send(uploadCommand);
 
-    // Generate R2 public URL
-    const file_url = `https://${process.env.R2_PUBLIC_URL}/${fileName}`;
+    // 🔥 Generate the CORRECT public URL
+    // Format: https://pub-{accountId}.r2.dev/{r2Key}
+    const file_url = `https://${process.env.R2_PUBLIC_URL}/${r2Key}`;
+
+    console.log('🔗 Generated public URL:', file_url);
 
     // Save to database
     const [newVideo] = await db
@@ -57,15 +61,17 @@ export const uploadVideo = async (req: Request, res: Response) => {
         id: videoId,
         title,
         description,
-        file_url,
+        file_url, // This should be the full public URL
         mimeType: file.mimetype,
         genreId: genreId || null,
+        // We don't store r2_key since we don't have the column
       })
       .returning();
 
     res.status(201).json({
       message: 'Video uploaded successfully',
       video: newVideo,
+      note: 'Video will be streamed through /api/stream/:id endpoint',
     });
   } catch (error) {
     console.error('Upload error:', error);
@@ -149,25 +155,55 @@ export const streamVideo = async (req: Request, res: Response) => {
 
     if (!video) {
       console.error('❌ Video not found in database:', id);
-      return res.status(404).json({ error: 'Video not found in database' });
+      return res.status(404).json({ error: 'Video not found' });
     }
 
     console.log('✅ Video metadata found:', video.title);
-    console.log('🔗 Stored file URL:', video.file_url);
+    console.log('🔗 Stored file_url:', video.file_url);
 
-    // Extract the R2 key correctly
+    // 🔥 Extract R2 key from file_url
     let r2Key = '';
 
-    r2Key = `${video.file_url}`; // Adjust based on your URL structure
+    if (video.file_url) {
+      try {
+        // Your file_url looks like:
+        // https://pub-7801d043ab3f4e069174ad35d8439a99.r2.dev/videos/3a24741a-ad27-43d0-9623-a7080703c385-filename.mp4
 
-    console.log('🔑 Using R2 Key:', r2Key);
+        // Extract the path after the domain
+        const url = new URL(video.file_url);
+        // url.pathname = "/videos/3a24741a-ad27-43d0-9623-a7080703c385-filename.mp4"
+        // Remove the leading slash
+        r2Key = url.pathname.substring(1);
 
-    // Set CORS headers FIRST
+        console.log('🔑 Extracted R2 key:', r2Key);
+      } catch (error) {
+        console.error('❌ Failed to parse file_url:', error);
+        // Try alternative parsing
+        if (video.file_url.includes('r2.dev/')) {
+          const parts = video.file_url.split('r2.dev/');
+          if (parts.length > 1) {
+            r2Key = parts[1];
+            console.log('🔑 Fallback extracted R2 key:', r2Key);
+          }
+        }
+      }
+    }
+
+    if (!r2Key) {
+      console.error('❌ Could not extract R2 key from URL:', video.file_url);
+      return res.status(500).json({
+        error: 'Invalid video URL format',
+        file_url: video.file_url,
+      });
+    }
+
+    console.log('🔑 Final R2 key to use:', r2Key);
+
+    // ========== SET CORS HEADERS ==========
     const allowedOrigins = [
-      'http://localhost:3001',
       'http://localhost:3000',
-      'https://streamz-api-39o0.onrender.com', // Backend
-      'https://streamz-p03k.onrender.com', // Frontend
+      'https://streamz-p03k.onrender.com',
+      'https://streamz-api-39o0.onrender.com',
       'https://pub-7801d043ab3f4e069174ad35d8439a99.r2.dev', // R2 direct access
       req.headers.origin || '',
     ];
@@ -176,24 +212,26 @@ export const streamVideo = async (req: Request, res: Response) => {
     const origin = allowedOrigins.includes(requestOrigin) ? requestOrigin : '*';
 
     res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
     res.setHeader(
-      'Access-Control-Allow-Methods',
-      'GET, PUT, DELETE, POST,   HEAD, OPTIONS'
+      'Access-Control-Allow-Headers',
+      'Range, Content-Type, Authorization'
     );
-    res.setHeader('Access-Control-Allow-Headers', 'Range, Content-Type');
     res.setHeader(
       'Access-Control-Expose-Headers',
-      'ETag, Content-Length, Content-Type, Content-Range, Content-Range, Accesnt-Control-Allow-Origin'
+      'Content-Length, Content-Range, Content-Type, Accept-Ranges'
     );
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
 
     // Handle OPTIONS preflight
     if (req.method === 'OPTIONS') {
       return res.status(200).end();
     }
 
+    // ========== STREAM FROM R2 ==========
     try {
-      // Check if file exists in R2
+      // Get video metadata from R2
       const headCommand = new HeadObjectCommand({
         Bucket: R2_BUCKET,
         Key: r2Key,
@@ -201,22 +239,26 @@ export const streamVideo = async (req: Request, res: Response) => {
 
       console.log('📡 Checking R2 for key:', r2Key);
       const headResponse = await r2Client.send(headCommand);
-      console.log('✅ R2 Head response:', headResponse);
+      console.log('✅ R2 Head response:', {
+        contentLength: headResponse.ContentLength,
+        contentType: headResponse.ContentType,
+        lastModified: headResponse.LastModified,
+      });
 
       if (!headResponse.ContentLength) {
-        console.error('❌ No content length from R2 for key:', r2Key);
+        console.error('❌ No content length from R2');
         return res
           .status(404)
-          .json({ error: 'Video file not found in storage' });
+          .json({ error: 'Video file not found in R2 storage' });
       }
 
       const fileSize = headResponse.ContentLength;
-      const mimeType =
+      const contentType =
         headResponse.ContentType || video.mimeType || 'video/mp4';
 
-      console.log(`📏 File size: ${fileSize}, MIME type: ${mimeType}`);
+      console.log(`📏 File size: ${fileSize}, Content-Type: ${contentType}`);
 
-      // Handle range requests for streaming
+      // Handle range requests (for streaming)
       if (range) {
         const parts = range.replace(/bytes=/, '').split('-');
         const start = parseInt(parts[0], 10);
@@ -234,7 +276,7 @@ export const streamVideo = async (req: Request, res: Response) => {
           'Content-Range': `bytes ${start}-${end}/${fileSize}`,
           'Accept-Ranges': 'bytes',
           'Content-Length': chunkSize,
-          'Content-Type': mimeType,
+          'Content-Type': contentType,
           'Cache-Control': 'public, max-age=31536000',
         });
 
@@ -251,8 +293,10 @@ export const streamVideo = async (req: Request, res: Response) => {
 
         if (Body) {
           // Pipe the stream to response
-          if (typeof (Body as any).getReader === 'function') {
-            // For Bun/Web Streams / Web ReadableStream
+          if ((Body as any).pipe) {
+            (Body as any).pipe(res);
+          } else if (typeof (Body as any).getReader === 'function') {
+            // For Bun/Web Streams
             const reader = (Body as any).getReader();
             while (true) {
               const { done, value } = await reader.read();
@@ -260,22 +304,13 @@ export const streamVideo = async (req: Request, res: Response) => {
               res.write(value);
             }
             res.end();
-          } else if (Body instanceof Blob) {
-            // For Blob objects
-            const arrayBuffer = await Body.arrayBuffer();
-            res.write(Buffer.from(arrayBuffer));
-            res.end();
-          } else if (
-            'pipe' in Body &&
-            typeof (Body as any).pipe === 'function'
-          ) {
-            // For Node.js streams
-            (Body as any).pipe(res);
           } else {
             // Fallback
-            const chunks = [];
-            for await (const chunk of Body) {
-              chunks.push(chunk);
+            const chunks: Buffer[] = [];
+            for await (const chunk of Body as AsyncIterable<
+              Uint8Array | Buffer
+            >) {
+              chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
             }
             res.write(Buffer.concat(chunks));
             res.end();
@@ -290,31 +325,27 @@ export const streamVideo = async (req: Request, res: Response) => {
           Key: r2Key,
         });
 
-        const { Body, ContentLength, ContentType } = await r2Client.send(
-          getCommand
-        );
+        const {
+          Body,
+          ContentLength,
+          ContentType: r2ContentType,
+        } = await r2Client.send(getCommand);
+
+        const finalContentType = r2ContentType || contentType;
+        const finalContentLength = ContentLength || fileSize;
 
         res.writeHead(200, {
-          'Content-Length': ContentLength || fileSize,
-          'Content-Type': ContentType || mimeType,
+          'Content-Length': finalContentLength,
+          'Content-Type': finalContentType,
           'Accept-Ranges': 'bytes',
           'Cache-Control': 'public, max-age=31536000',
         });
 
         if (Body) {
           // Pipe the stream
-          if (Body instanceof Blob) {
-            // For Blob objects
-            const arrayBuffer = await Body.arrayBuffer();
-            res.write(Buffer.from(arrayBuffer));
-            res.end();
-          } else if (
-            'pipe' in Body &&
-            typeof (Body as any).pipe === 'function'
-          ) {
+          if ((Body as any).pipe) {
             (Body as any).pipe(res);
           } else if (typeof (Body as any).getReader === 'function') {
-            // For Bun/Web Streams / Web ReadableStream
             const reader = (Body as any).getReader();
             while (true) {
               const { done, value } = await reader.read();
@@ -323,9 +354,11 @@ export const streamVideo = async (req: Request, res: Response) => {
             }
             res.end();
           } else {
-            const chunks = [];
-            for await (const chunk of Body) {
-              chunks.push(chunk);
+            const chunks: Buffer[] = [];
+            for await (const chunk of Body as AsyncIterable<
+              Uint8Array | Buffer
+            >) {
+              chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
             }
             res.write(Buffer.concat(chunks));
             res.end();
@@ -333,23 +366,19 @@ export const streamVideo = async (req: Request, res: Response) => {
         }
       }
     } catch (r2Error: any) {
-      console.error('❌ R2 Error details:', {
+      console.error('❌ R2 streaming error:', {
         message: r2Error.message,
         name: r2Error.name,
-        stack: r2Error.stack,
         key: r2Key,
         bucket: R2_BUCKET,
       });
 
-      // Try direct redirect as fallback
-      if (video.file_url) {
-        console.log('🔄 Falling back to direct URL:', video.file_url);
-        return res.redirect(video.file_url);
-      }
-
+      // 🚫 DO NOT redirect to R2 URL - it will cause CORS errors!
+      // Instead, return a proper error
       return res.status(500).json({
         error: 'Video streaming failed',
         details: r2Error.message,
+        note: 'Check if the R2 key exists and has proper permissions',
       });
     }
   } catch (error: any) {
@@ -360,7 +389,6 @@ export const streamVideo = async (req: Request, res: Response) => {
     });
   }
 };
-
 // Update video
 export const updateVideo = async (req: Request, res: Response) => {
   try {

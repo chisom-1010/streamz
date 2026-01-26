@@ -48,19 +48,7 @@ app.use(express.urlencoded({ extended: true, limit: '700mb' }));
 // ========== ROUTES ==========
 
 // API Routes
-app.get('/api/stream/:id', async (req, res) => {
-  console.log('🎬 Direct stream route hit:', req.params.id);
-
-  // Import the streamVideo function
-  const { streamVideo } = await import('./controllers/VideoController');
-
-  // Call the function
-  return streamVideo(req, res);
-});
-
-app.get('/api/stream/test', (req, res) => {
-  res.json({ message: 'Direct stream test route' });
-});
+app.use('/api/stream', streamRoutes);
 app.use('/api/videos', videoRoutes);
 app.use('/api/auth', authRoutes);
 
