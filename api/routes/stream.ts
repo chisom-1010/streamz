@@ -10,6 +10,7 @@ router.options('/:id', (req, res) => {
     'http://localhost:3000',
     'https://streamz-p03k.onrender.com',
     'https://streamz-api-39o0.onrender.com',
+    'https://pub-7801d043ab3f4e069174ad35d8439a99.r2.dev', // R2 direct access
     req.headers.origin || '',
   ];
 
