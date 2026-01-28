@@ -161,31 +161,28 @@ export const streamVideo = async (req: Request, res: Response) => {
     console.log('✅ Video metadata found:', video.title);
     console.log('🔗 Stored file_url:', video.file_url);
 
-    // 🔥 Extract R2 key from file_url
     let r2Key = '';
 
     if (video.file_url) {
-      try {
-        // Your file_url looks like:
-        // https://pub-7801d043ab3f4e069174ad35d8439a99.r2.dev/videos/3a24741a-ad27-43d0-9623-a7080703c385-filename.mp4
+      // More robust extraction
+      const url = new URL(video.file_url);
+      // Remove the leading slash from pathname
+      r2Key = url.pathname.startsWith('/')
+        ? url.pathname.substring(1)
+        : url.pathname;
 
-        // Extract the path after the domain
-        const url = new URL(video.file_url);
-        // url.pathname = "/videos/3a24741a-ad27-43d0-9623-a7080703c385-filename.mp4"
-        // Remove the leading slash
-        r2Key = url.pathname.substring(1);
+      // Decode URL-encoded characters
+      r2Key = decodeURIComponent(r2Key);
 
-        console.log('🔑 Extracted R2 key:', r2Key);
-      } catch (error) {
-        console.error('❌ Failed to parse file_url:', error);
-        // Try alternative parsing
-        if (video.file_url.includes('r2.dev/')) {
-          const parts = video.file_url.split('r2.dev/');
-          if (parts.length > 1) {
-            r2Key = parts[1];
-            console.log('🔑 Fallback extracted R2 key:', r2Key);
-          }
-        }
+      console.log('🔑 Extracted R2 key:', r2Key);
+    }
+
+    // If extraction fails, try to construct from known pattern
+    if (!r2Key && video.file_url && video.file_url.includes('r2.dev/videos/')) {
+      const parts = video.file_url.split('r2.dev/videos/');
+      if (parts.length > 1) {
+        r2Key = 'videos/' + decodeURIComponent(parts[1]);
+        console.log('🔑 Constructed R2 key:', r2Key);
       }
     }
 
@@ -215,11 +212,11 @@ export const streamVideo = async (req: Request, res: Response) => {
     res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
     res.setHeader(
       'Access-Control-Allow-Headers',
-      'Range, Content-Type, Authorization'
+      'Range, Content-Type, Authorization',
     );
     res.setHeader(
       'Access-Control-Expose-Headers',
-      'Content-Length, Content-Range, Content-Type, Accept-Ranges'
+      'Content-Length, Content-Range, Content-Type, Accept-Ranges',
     );
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     res.setHeader('Access-Control-Allow-Credentials', 'true');

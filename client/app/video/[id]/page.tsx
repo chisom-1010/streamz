@@ -30,7 +30,7 @@ export default function VideoPage() {
 
       // First, test if the backend is accessible
       const healthCheck = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/health`
+        `${process.env.NEXT_PUBLIC_API_URL}/api/health`,
       );
       console.log('🏥 Backend health:', healthCheck.status);
 
@@ -44,7 +44,7 @@ export default function VideoPage() {
         // Test the streaming URL
         const streamTest = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/stream/${videoId}`,
-          { method: 'HEAD' }
+          { method: 'HEAD' },
         );
         console.log('📹 Stream test:', streamTest.status);
       } else {
@@ -58,7 +58,7 @@ export default function VideoPage() {
       try {
         console.log('🔄 Trying direct fetch...');
         const directResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/stream/${videoId}`
+          `${process.env.NEXT_PUBLIC_API_URL}/api/stream/${videoId}`,
         );
         const data = await directResponse.json();
         console.log('📡 Direct fetch result:', data);
@@ -208,7 +208,7 @@ export default function VideoPage() {
       </header>
 
       <main className='max-w-7xl mx-auto py-8 px-4'>
-        <div className='grid grid-cols-1 xl:grid-cols-3 gap-8'>
+        <div className='grid grid-row-1 xl:grid-row-3 gap-8'>
           <div className='xl:col-span-2'>
             <VideoJsPlayer video={video} autoplay={true} />
 
@@ -230,7 +230,7 @@ export default function VideoPage() {
             </div>
           </div>
 
-          <div className='xl:col-span-1'>
+          <div className='lg:col-span-1'>
             <h2 className='text-xl font-bold mb-6'>More Videos</h2>
             <VideoList
               limit={6}
