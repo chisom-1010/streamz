@@ -30,7 +30,7 @@ services:
       - key: SUPABASE_ANON_KEY
         sync: false
       - key: FRONTEND_URL
-        value: https://streamz-p03k.onrender.com
+        value: https://streamz-bg0h.onrender.com
 
   # Frontend Service (Next.js)
   - type: web
@@ -57,7 +57,7 @@ services:
       - key: PORT
         value: 10000
       - key: NEXT_PUBLIC_API_URL
-        value: https://streamz-api-39o0.onrender.com
+        value: https://streamz-api-uvey.onrender.com
       - key: NEXT_PUBLIC_SUPABASE_URL
         sync: false
       - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
