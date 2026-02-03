@@ -1,0 +1,33 @@
+# CORRECTED render.yaml
+services:
+  # Backend Service (Express + Supabase)
+  - type: web
+    name: streamz-api
+    runtime: node # ← Changed from "bun" to "node"
+    rootDir: ./
+    region: oregon
+    buildCommand: |
+      # Install Bun first
+      curl -fsSL https://bun.sh/install | bash
+      export BUN_INSTALL="$HOME/.bun"
+      export PATH="$BUN_INSTALL/bin:$PATH"
+      # Now install dependencies with Bun
+      bun install
+    startCommand: |
+      # Make sure Bun is in PATH for runtime
+      export BUN_INSTALL="$HOME/.bun"
+      export PATH="$BUN_INSTALL/bin:$PATH"
+      bun /server.ts
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: FRONTEND_URL
+        value: https://streamz-p03k.onrender.com

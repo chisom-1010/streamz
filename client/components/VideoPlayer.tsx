@@ -17,7 +17,7 @@ export default function VideoJsPlayer({
   video,
   autoplay = false,
 }: VideoJsPlayerProps) {
-  const videoRef = useRef<HTMLVideoElement>(null); // Changed to HTMLVideoElement
+  const videoRef = useRef<HTMLVideoElement>(null);
   const playerRef = useRef<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -201,7 +201,6 @@ export default function VideoJsPlayer({
   return (
     <div className='relative aspect-video bg-black rounded-lg overflow-hidden'>
       <div data-vjs-player className='h-full w-full'>
-        {/* Use video element instead of div */}
         <video
           id={videoElementId}
           ref={videoRef}
