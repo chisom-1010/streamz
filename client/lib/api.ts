@@ -344,6 +344,11 @@ class ApiClient {
       endpoints: Record<string, string>;
     }>('/api/health');
   }
+
+  // User analytics methods
+  async getUsers() {
+    return this.request<{ users: User[] }>('/api/users');
+  }
 }
 
 // Export singleton instance

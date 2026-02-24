@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 import videoRoutes from './routes/videos';
 import authRoutes from './routes/auth';
+import userRoutes from './routes/users.js';
 import streamRoutes from './routes/stream';
 import { errorHandler } from './middleware/errorHandler';
 
@@ -50,6 +51,7 @@ app.use(express.urlencoded({ extended: true, limit: '700mb' }));
 // API Routes
 app.use('/api/stream', streamRoutes);
 app.use('/api/videos', videoRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 
 // Health check
